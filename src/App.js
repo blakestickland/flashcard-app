@@ -1,9 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import FlashcardList from './FlashcardList';
 import './app.css';
+import axios from 'axios';
 
 function App() {
   const [flashcards, setFlashcards] = useState(SAMPLE_FLASHCARDS);
+
+  useEffect(() => {
+    axios
+      .get("https://opentdb.com/api.php?amount=10")
+      .then(res => {
+        setFlashcards(res.data.results.map((questionItem, index) => {
+            const answer = decodeString(questionItem.correct_answer);
+            const options = [
+              ...questionItem.incorrect_answers.map(answer => decodeString(answer))
+              , answer];
+            return {
+              id: `${index}-${Date.now()}`,
+              question: decodeString(questionItem.question),
+              answer: questionItem.correct_answer,
+              options: options.sort(() => Math.random() - .5)
+            }
+          })
+
+        )
+        console.log(res.data.results)
+      });
+  }, []);
+
+  function decodeString(str) {
+    const textArea = document.createElement('textArea')
+    textArea.innerHTML = str
+    return textArea.value;
+  }
 
   return (
     <FlashcardList flashcards={flashcards} />
